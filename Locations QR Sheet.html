@@ -1,0 +1,267 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Locations QR Sheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: narrow ruled sheet, label column + QR column, dashed cell borders like the original Word table */
+:root {
+  --bg: #f3f4f1;
+  --paper: #ffffff;
+  --ink: #16181a;
+  --muted: #6a7073;
+  --rule: #b9bfc2;
+  --accent: #0b6e5f;
+  --accent-ink: #ffffff;
+  --focus: #e8f3f0;
+  --danger: #b3261e;
+  --qr-bg: #ffffff;
+  --qr-fg: #000000;
+  --font-ui: "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111314; --paper: #1b1e20; --ink: #eceeed; --muted: #98a0a3; --rule: #3d4346;
+    --accent: #4fc3ad; --accent-ink: #06201b; --focus: #223632; --danger: #f2b8b5; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111314; --paper: #1b1e20; --ink: #eceeed; --muted: #98a0a3; --rule: #3d4346;
+  --accent: #4fc3ad; --accent-ink: #06201b; --focus: #223632; --danger: #f2b8b5; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; flex-direction: column; gap: 6px; }
+h1 { font-size: 1.6rem; line-height: 1.25; margin: 0; font-weight: 700; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 60ch; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar .count { margin-inline-start: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.875rem; }
+button {
+  font: inherit; font-weight: 600; cursor: pointer; border-radius: 6px; padding: 8px 14px;
+  border: 1px solid var(--rule); background: var(--paper); color: var(--ink);
+}
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sheet { background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.row { display: grid; grid-template-columns: 1fr 112px 64px 40px; border-bottom: 1px dashed var(--rule); align-items: stretch; }
+.row:last-child { border-bottom: 0; }
+.row input {
+  font-family: var(--font-mono); font-weight: 600; font-size: 1.125rem; text-align: center;
+  background: transparent; color: var(--ink); border: 0; padding: 12px 10px; min-width: 0; width: 100%;
+  border-inline-end: 1px dashed var(--rule); border-radius: 0;
+}
+.row input:focus { background: var(--focus); outline-offset: -2px; }
+.qr { display: flex; align-items: center; justify-content: center; padding: 8px; border-inline-end: 1px dashed var(--rule); }
+.qr .tile { width: 92px; height: 92px; background: var(--qr-bg); display: flex; align-items: center; justify-content: center; border-radius: 2px; }
+.qr svg { width: 100%; height: 100%; display: block; }
+.qr .empty { color: #8a9094; font-size: 0.75rem; text-align: center; padding: 6px; }
+.del { background: transparent; border: 0; color: var(--muted); border-radius: 0; padding: 0; font-size: 1.25rem; font-weight: 400; }
+.del:hover { color: var(--danger); }
+.prt { border: 0; border-radius: 0; background: transparent; color: var(--accent); font-size: 0.8125rem; padding: 0 4px; border-inline-end: 1px dashed var(--rule); }
+.prt:hover { background: var(--focus); }
+.row.is-only { background: var(--focus); }
+.status { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; background: var(--paper); border: 1px solid var(--accent); border-radius: 6px; padding: 10px 14px; }
+.status span { flex: 1 1 200px; min-width: 0; }
+.status b { font-family: var(--font-mono); }
+.note { color: var(--muted); font-size: 0.8125rem; margin: 0; max-width: 60ch; }
+@media print {
+  :root, body { background: #fff !important; color: #000 !important; }
+  @page { margin: 0; }
+  body { padding: 8mm; }
+  .wrap { max-width: none; gap: 0; }
+  header, .bar, .note, .del { display: none !important; }
+  .sheet { border: 0; border-radius: 0; background: #fff; }
+  .row { display: flex; justify-content: flex-start; align-items: center; gap: 3px; break-inside: avoid; border: 0 !important; background: #fff !important; padding: 3px 0; }
+  .row input { flex: 0 0 auto; width: calc(var(--n, 3) * 1ch + 4px); color: #000; font-size: 2.6rem; padding: 0; border: 0 !important; text-align: left; }
+  .qr { border: 0 !important; padding: 0; flex: 0 0 auto; }
+  .qr .tile { width: 60px; height: 60px; }
+  .prt, .status { display: none !important; }
+  body[data-only] .row:not(.is-only) { display: none !important; }
+}
+@media (max-width: 380px) { .row { grid-template-columns: 1fr 96px 54px 32px; } .qr .tile { width: 84px; height: 84px; } }
+</style>
+
+<div class="wrap" dir="rtl">
+  <header>
+    <h1>شيت اللوكيشنز و الـ QR</h1>
+    <p>عدّل أي كلام في العمود الأول و الـ QR جنبه بيتغير فوراً. بيتحفظ تلقائياً على الجهاز ده.</p>
+  </header>
+
+  <div class="bar">
+    <button class="primary" id="add" type="button">+ صف جديد</button>
+    <button id="reset" type="button">رجّع A-01 إلى A-28</button>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="sheet" id="sheet" dir="ltr" aria-label="جدول اللوكيشنز"></div>
+
+  <div class="status" id="status" hidden>
+    <span id="status-text"></span>
+    <button type="button" id="status-cancel">إلغاء و طباعة الكل</button>
+  </div>
+  <p class="note">الـ QR بيحتوي على النص المكتوب بالظبط، و بيتقرأ بأي كاميرا. اضغط Enter للنزول للصف اللي بعده.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function () {
+  var KEY = "locations-qr-sheet-v1";
+  var sheet = document.getElementById("sheet");
+  var countEl = document.getElementById("count");
+  var statusEl = document.getElementById("status");
+  var statusText = document.getElementById("status-text");
+  var onlyIdx = null;
+
+  if (window.qrcode && qrcode.stringToBytesFuncs) qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
+
+  function defaults() {
+    var a = [];
+    for (var i = 1; i <= 28; i++) a.push("A-" + (i < 10 ? "0" + i : i));
+    return a;
+  }
+  function load() {
+    try {
+      var s = JSON.parse(localStorage.getItem(KEY));
+      if (Array.isArray(s) && s.length) return s.map(String);
+    } catch (e) {}
+    return defaults();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(rows)); } catch (e) {} }
+
+  var rows = load();
+
+  function syncOnly() {
+    var kids = sheet.children;
+    for (var k = 0; k < kids.length; k++) kids[k].classList.toggle("is-only", k === onlyIdx);
+    if (onlyIdx === null) {
+      document.body.removeAttribute("data-only");
+      statusEl.hidden = true;
+    } else {
+      document.body.setAttribute("data-only", "1");
+      statusEl.hidden = false;
+      statusText.textContent = "";
+      var b = document.createElement("b");
+      b.textContent = rows[onlyIdx] || "(فاضي)";
+      statusText.appendChild(document.createTextNode("جاهز للطباعة: "));
+      statusText.appendChild(b);
+      statusText.appendChild(document.createTextNode(" لوحده. دوس جوه الصفحة و اضغط Ctrl+P (أو Cmd+P)."));
+    }
+  }
+
+  function qrSvg(text) {
+    if (!text.trim()) return '<span class="empty">اكتب نص</span>';
+    if (!window.qrcode) return '<span class="empty">المكتبة لم تُحمّل</span>';
+    try {
+      var q = qrcode(0, "M");
+      q.addData(text);
+      q.make();
+      return q.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    } catch (e) {
+      return '<span class="empty">النص طويل جداً</span>';
+    }
+  }
+  function paint(tile, text) {
+    tile.innerHTML = qrSvg(text);
+    var svg = tile.querySelector("svg");
+    if (svg) { svg.setAttribute("shape-rendering", "crispEdges"); }
+  }
+  function updateCount() { countEl.textContent = rows.length + " لوكيشن"; }
+
+  function render(focusIdx) {
+    sheet.innerHTML = "";
+    rows.forEach(function (text, i) {
+      var row = document.createElement("div");
+      row.className = "row";
+
+      var input = document.createElement("input");
+      input.type = "text";
+      input.id = "loc-" + i;
+      input.value = text;
+      input.style.setProperty("--n", Math.max(1, text.length));
+      input.setAttribute("dir", "auto");
+      input.setAttribute("aria-label", "اللوكيشن رقم " + (i + 1));
+      input.autocomplete = "off";
+      input.spellcheck = false;
+
+      var qr = document.createElement("div");
+      qr.className = "qr";
+      var tile = document.createElement("div");
+      tile.className = "tile";
+      qr.appendChild(tile);
+      paint(tile, text);
+
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "del";
+      del.title = "احذف الصف";
+      del.setAttribute("aria-label", "احذف الصف " + (i + 1));
+      del.textContent = "×";
+
+      var prt = document.createElement("button");
+      prt.type = "button";
+      prt.className = "prt";
+      prt.textContent = "اطبع ده";
+      prt.setAttribute("aria-label", "اطبع اللوكيشن رقم " + (i + 1) + " فقط");
+      prt.addEventListener("click", function () {
+        onlyIdx = i; syncOnly();
+        try { window.print(); } catch (e) {}
+      });
+
+      input.addEventListener("input", function () {
+        rows[i] = input.value;
+        input.style.setProperty("--n", Math.max(1, input.value.length));
+        if (onlyIdx === i) syncOnly();
+        paint(tile, input.value);
+        save();
+      });
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (i === rows.length - 1) { rows.push(""); save(); render(i + 1); }
+          else { var n = document.getElementById("loc-" + (i + 1)); if (n) { n.focus(); n.select(); } }
+        }
+      });
+      del.addEventListener("click", function () {
+        onlyIdx = null;
+        if (rows.length === 1) { rows[0] = ""; } else { rows.splice(i, 1); }
+        save(); render();
+      });
+
+      row.appendChild(input); row.appendChild(qr); row.appendChild(prt); row.appendChild(del);
+      sheet.appendChild(row);
+    });
+    updateCount();
+    syncOnly();
+    if (typeof focusIdx === "number") {
+      var f = document.getElementById("loc-" + focusIdx);
+      if (f) { f.focus(); }
+    }
+  }
+
+  document.getElementById("add").addEventListener("click", function () {
+    rows.push(""); save(); render(rows.length - 1);
+  });
+  var resetBtn = document.getElementById("reset");
+  var armed = false, timer;
+  resetBtn.addEventListener("click", function () {
+    if (!armed) {
+      armed = true; resetBtn.textContent = "اضغط تاني للتأكيد";
+      timer = setTimeout(function () { armed = false; resetBtn.textContent = "رجّع A-01 إلى A-28"; }, 3000);
+      return;
+    }
+    clearTimeout(timer); armed = false; resetBtn.textContent = "رجّع A-01 إلى A-28";
+    onlyIdx = null; rows = defaults(); save(); render();
+  });
+
+  document.getElementById("status-cancel").addEventListener("click", function () { onlyIdx = null; syncOnly(); });
+  render();
+})();
+</script>
+
+</body></html>
